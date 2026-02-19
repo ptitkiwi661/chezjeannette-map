@@ -162,6 +162,8 @@
     let map = null;
     let markersById = {};
     let openPopup = null;
+    let isMapReady = false;
+    let pendingInitSingle = null;
 
     // -----------------------------
     // RAYON À PARTIR DES BOUNDS
@@ -325,12 +327,40 @@
             console.warn("⚠️ Transit layer introuvable :", e);
           }
         });
+
+        isMapReady = true;
+
+        if (pendingInitSingle) {
+          handleInitSingle(pendingInitSingle);
+          pendingInitSingle = null;
+        }
       });
     }
 
     // -----------------------------
     // RENDER MARKERS
     // -----------------------------
+
+    function handleInitSingle(habitat) {
+  // Effacer les anciens marqueurs
+  Object.values(markersById).forEach(m => m.remove());
+  markersById = {};
+
+  // Afficher le marker unique
+  renderHabitats([habitat]);
+
+  // Zoom auto
+  map.flyTo({
+    center: [habitat.lng, habitat.lat],
+    zoom: 14,
+    speed: 0.8
+  });
+
+  // Cercle
+  const radius = 800; // en mètres
+  drawCircle(habitat.lng, habitat.lat, radius);
+}
+    
     function renderHabitats(habitats) {
 
       // Clear anciens markers
@@ -521,25 +551,12 @@
       }
 
       if (type === "INIT_SINGLE" && habitat) {
-
-          // Effacer les anciens marqueurs
-          Object.values(markersById).forEach(m => m.remove());
-          markersById = {};
-      
-          // Afficher le marker unique
-          renderHabitats([habitat]);
-      
-          // Zoom auto
-          map.flyTo({
-              center: [habitat.lng, habitat.lat],
-              zoom: 14,
-              speed: 0.8
-          });
-      
-          // 🎯 AJOUT ICI → cercle autour de l'habitat
-          const radius = 800; // 800 ≈ 10 min à pied
-          drawCircle(habitat.lng, habitat.lat, radius);
-      }
+  if (!isMapReady) {
+    pendingInitSingle = habitat; // on garde en mémoire
+    return;
+  }
+  handleInitSingle(habitat);
+}
     });
 
     initMap();
