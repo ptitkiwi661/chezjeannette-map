@@ -201,6 +201,14 @@
       return maxDist;
     }
 
+    function clearCircle() {
+  if (!map) return;
+
+  if (map.getLayer("circle-layer")) map.removeLayer("circle-layer");
+  if (map.getLayer("circle-outline")) map.removeLayer("circle-outline");
+  if (map.getSource("circle-source")) map.removeSource("circle-source");
+}
+
     // -----------------------------
     // DESSINER UN CERCLE
     // -----------------------------
@@ -512,6 +520,7 @@
               minLat, minLng, maxLat, maxLng } = event.data || {};
 
       if (type === "INIT_HABITATS") {
+        clearCircle(); 
         renderHabitats(habitats);
       }
 
